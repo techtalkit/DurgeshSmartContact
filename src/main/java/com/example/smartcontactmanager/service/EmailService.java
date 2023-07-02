@@ -18,7 +18,7 @@ public boolean sendEmail(String subject,String message1,String to) {
     //provide Mailtrap's username
     final String username = "shafaat888@gmail.com";
     //provide Mailtrap's password
-    final String password = "imnfsulwilpdscjr";
+    final String password = "";
     //provide Mailtrap's host address
     String host = "smtp.gmail.com";
     //configure Mailtrap's SMTP server details
