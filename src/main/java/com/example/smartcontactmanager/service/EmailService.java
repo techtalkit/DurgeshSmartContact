@@ -46,7 +46,8 @@ public boolean sendEmail(String subject,String message1,String to) {
         //set email subject field
         message.setSubject(subject);
         //set the content of the email message
-        message.setText(message1);
+        //message.setText(message1);
+        message.setContent(message1,"text/html");
         //send the email message
         Transport.send(message);
         System.out.println("Email Message Sent Successfully");
