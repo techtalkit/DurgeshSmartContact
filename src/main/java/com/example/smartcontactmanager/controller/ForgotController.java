@@ -5,6 +5,7 @@ import com.example.smartcontactmanager.entities.User;
 import com.example.smartcontactmanager.service.EmailService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,6 +19,8 @@ public class ForgotController {
     private EmailService emailService;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private BCryptPasswordEncoder bCryptPasswordEncoder;
     Random random=new Random(1000);
     @RequestMapping("/forgot")
     public String openEmailForm(){
@@ -27,8 +30,9 @@ public class ForgotController {
     public String sendOTP(@RequestParam("email") String email, HttpSession session){
         System.out.println("Email "+email);
         //Generating the otp of the 4 digit
-        int otp=random.nextInt(999999);
+        long otp=random.nextLong(999999);
         System.out.println("OTP "+otp);
+        System.out.println();
         //write the code to send the otp to email
         String subject="OTP from SCM";
         String message=""+
@@ -41,7 +45,7 @@ public class ForgotController {
         String to=email;
         boolean flag=this.emailService.sendEmail(subject,message,email);
         if(flag){
-            session.setAttribute("otp",otp);
+            session.setAttribute("myotp",otp);
             session.setAttribute("email",email);
             return "verify_otp";
         }else{
@@ -51,8 +55,8 @@ public class ForgotController {
     }
     //verify otp
     @PostMapping("/verify-otp")
-    public String verifyOtp(@RequestParam("otp") int otp,HttpSession session){
-           int myOtp=(int)session.getAttribute("otp");
+    public String verifyOtp(@RequestParam("otp") long otp,HttpSession session){
+           long myOtp=(long)session.getAttribute("myotp");
            String email=(String) session.getAttribute("email");
            if(myOtp==otp){
                //password change form
@@ -69,5 +73,14 @@ public class ForgotController {
                session.setAttribute("message","You have entered wrong OTP");
                return "verify_otp";
            }
+    }
+    //Change Password Handler
+    @PostMapping("/change-password")
+    public String changePassword(@RequestParam("newpassword") String newpassword,HttpSession session){
+        String email=(String) session.getAttribute("email");
+        User user=this.userRepository.getUserByUserName(email);
+        user.setPassword(this.bCryptPasswordEncoder.encode(newpassword));
+        this.userRepository.save(user);
+        return "redirect:/signin?change=password changed successfully..";
     }
 }
