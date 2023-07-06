@@ -34,3 +34,31 @@ const search=()=>{
         });
     }
 }
+
+//First Request to server to create the order
+const paymentStart=()=>{
+    console.log("payment started");
+    let amount=$("#payment_field").val();
+    console.log(amount);
+    if(amount=='' || amount==null){
+        alert("amount is required");
+        return;
+    }
+    //code
+    //we will use ajax to send the request to server to create order
+    $.ajax({
+        url:'/user/create_order',
+        data: {amount:amount},
+        contentType: 'application/json',
+        type:'POST',
+        dataType:'json',
+        success:function(response){
+            //invoked when success
+        },
+        error:function(error){
+            //invoked when error
+            console.log(error);
+            alert('something went wrong');
+        }
+    })
+}
