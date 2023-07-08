@@ -7,13 +7,15 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-
+import com.razorpay.*;
 import com.example.smartcontactmanager.dao.ContactRepository;
 import com.example.smartcontactmanager.dao.UserRepository;
 import com.example.smartcontactmanager.entities.Contact;
 import com.example.smartcontactmanager.entities.User;
 import com.example.smartcontactmanager.helper.Message;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
@@ -24,15 +26,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.SessionAttributes;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -243,5 +237,21 @@ public class UserController {
 
 		return "redirect:/user/index";
 	}
-
+	//Creating order for payment
+	@PostMapping("/create_order")
+	@ResponseBody
+	public String createOrder(@RequestBody Map<String,Object> data) throws Exception {
+		//System.out.println("Hey order function is executed");
+		int amt=Integer.parseInt(data.get("amount").toString());
+		RazorpayClient client=new RazorpayClient("rzp_test_NymB8bXkgJ7kXD","3s8OUU423WHpbTkDTzuIXL3n");
+		//order place by using the JsonObject
+		JSONObject ob=new JSONObject();
+		ob.put("amount",amt*100);
+		ob.put("currency","INR");
+		ob.put("receipt","txn_235425");
+		//Creating new order-->Request will go to Razorpay server
+		Order order=client.orders.create(ob);
+		System.out.println(order);
+		return order.toString();
+	}
 }
