@@ -9,6 +9,9 @@ import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import com.example.smartcontactmanager.dao.MyOrderRepository;
+import com.example.smartcontactmanager.entities.MyOrder;
 import com.razorpay.*;
 import com.example.smartcontactmanager.dao.ContactRepository;
 import com.example.smartcontactmanager.dao.UserRepository;
@@ -21,6 +24,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -45,6 +49,8 @@ public class UserController {
 	
 	@Autowired
 	private ContactRepository contactRepository;
+	@Autowired
+	private MyOrderRepository myOrderRepository;
 
 	//Method to adding common data to response
 	@ModelAttribute
@@ -240,7 +246,7 @@ public class UserController {
 	//Creating order for payment
 	@PostMapping("/create_order")
 	@ResponseBody
-	public String createOrder(@RequestBody Map<String,Object> data) throws Exception {
+	public String createOrder(@RequestBody Map<String,Object> data,Principal principal) throws Exception {
 		//System.out.println("Hey order function is executed");
 		int amt=Integer.parseInt(data.get("amount").toString());
 		RazorpayClient client=new RazorpayClient("rzp_test_NymB8bXkgJ7kXD","3s8OUU423WHpbTkDTzuIXL3n");
@@ -252,6 +258,25 @@ public class UserController {
 		//Creating new order-->Request will go to Razorpay server
 		Order order=client.orders.create(ob);
 		System.out.println(order);
+		//Save the order in the database
+		MyOrder myOrder=new MyOrder();
+		myOrder.setAmount(order.get("amount")+" ");
+		myOrder.setOrderId(order.get("id"));
+		myOrder.setPaymentId(null);
+		myOrder.setStatus(order.get("status"));
+		myOrder.setUser(this.userRepository.getUserByUserName(principal.getName()));
+		myOrder.setReceipt(order.get("receipt"));
+		//saving order to db
+		this.myOrderRepository.save(myOrder);
 		return order.toString();
+	}
+	@PostMapping("/update_order")
+	public ResponseEntity<?> updateOrder(@RequestBody Map<String,Object> data){
+		MyOrder myOrder=this.myOrderRepository.findByOrderId(data.get("order_id").toString());
+		myOrder.setPaymentId(data.get("payment_id").toString());
+		myOrder.setStatus(data.get("status").toString());
+        this.myOrderRepository.save(myOrder);
+		System.out.println(data);
+		return ResponseEntity.ok(Map.of("msg","order is updated"));
 	}
 }
